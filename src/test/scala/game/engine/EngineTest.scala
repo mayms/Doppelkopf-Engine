@@ -5,7 +5,7 @@ import game.engine.domain._
 
 import org.scalatest.FunSuite
 
-case class TestPlayer(val name:String, val hand:List[Card], val won:List[Card]) extends Player {
+case class TestPlayer(name:String, hand:List[Card], won:List[Card]) extends Player {
   def playCard(table:List[(Int, Card)]) = (TestPlayer(name, hand.tail, won), hand.head)
 
   def takeCards(cards:List[Card]) = TestPlayer(name, hand, cards ::: won)
@@ -22,6 +22,14 @@ object TestCardValue extends CardValue {
     case Card(Zehn, _) => 7
     case Card(Neun, _) => 6
   }
+}
+
+case class TestEngine(game:Game) extends Engine {
+  def getCard(player:Player, table:List[(Int, Card)]):(Player, Card) = player.playCard(table)
+  def takeCards(player:Player, cards:List[Card]):Player = player.takeCards(cards)
+
+  def playCard() = TestEngine(playCard(game))
+  def showdown() = TestEngine(showdown(game))
 }
 
 class EngineTest extends FunSuite {
@@ -41,14 +49,14 @@ class EngineTest extends FunSuite {
   private val p3cscs = TestPlayer("P3", Nil, Nil)
 
   test("Start a game.") {
-    val engine = Engine.startGame(TestCardValue)
-    engine.game.players.foreach(p => assert(p.hand.size === 12))
+    val game = Engine.startGame(TestCardValue)
+    game.players.foreach(p => assert(p.hand.size === 12))
   }
 
   test("Play a card.") {
     val players = p0 :: p1 :: p2 :: p3 :: Nil
     val active = 0
-    var engine = new Engine(Game(players, active, Nil, TestCardValue))
+    var engine = TestEngine(Game(players, active, Nil, TestCardValue))
     
     engine = engine playCard
 
@@ -60,7 +68,7 @@ class EngineTest extends FunSuite {
   test("Play 4 cards.") {
     val players = p0 :: p1 :: p2 :: p3 :: Nil
     val active = 0
-    var engine = new Engine(Game(players, active, Nil, TestCardValue))
+    var engine = TestEngine(Game(players, active, Nil, TestCardValue))
     
     engine = engine playCard()
     engine = engine playCard()
@@ -76,7 +84,7 @@ class EngineTest extends FunSuite {
     val players = p0c :: p1c :: p2c :: p3c :: Nil
     val active = 0
     val table = (0, Ass(Kreuz)) :: (1, Ass(Pik)) :: (2, Ass(Herz)) :: (3, Ass(Karo)) :: Nil
-    var engine = new Engine(Game(players, active, table, TestCardValue))
+    var engine = TestEngine(Game(players, active, table, TestCardValue))
     
     engine = engine showdown
 
@@ -88,7 +96,7 @@ class EngineTest extends FunSuite {
     val players = p0c :: p1c :: p2c :: p3c :: Nil
     val active = 0
     val table = (0, Koenig(Kreuz)) :: (1, Ass(Pik)) :: (2, Ass(Herz)) :: (3, Ass(Karo)) :: Nil
-    var engine = new Engine(Game(players, active, table, TestCardValue))
+    var engine = TestEngine(Game(players, active, table, TestCardValue))
     
     engine = engine showdown
 
@@ -100,7 +108,7 @@ class EngineTest extends FunSuite {
     val players = p0c :: p1c :: p2c :: p3c :: Nil
     val active = 0
     val table = (0, Koenig(Kreuz)) :: (1, Koenig(Pik)) :: (2, Ass(Herz)) :: (3, Ass(Karo)) :: Nil
-    var engine = new Engine(Game(players, active, table, TestCardValue))
+    var engine = TestEngine(Game(players, active, table, TestCardValue))
     
     engine = engine showdown
 
@@ -112,7 +120,7 @@ class EngineTest extends FunSuite {
     val players = p0c :: p1c :: p2c :: p3c :: Nil
     val active = 0
     val table = (0, Koenig(Kreuz)) :: (1, Koenig(Pik)) :: (2, Koenig(Herz)) :: (3, Ass(Karo)) :: Nil
-    var engine = new Engine(Game(players, active, table, TestCardValue))
+    var engine = TestEngine(Game(players, active, table, TestCardValue))
     
     engine = engine showdown
 
@@ -123,7 +131,7 @@ class EngineTest extends FunSuite {
   test("Game is over.") {
     val players = p0c :: p1c :: p2c :: p3c :: Nil
     val active = 0
-    var engine = new Engine(Game(players, active, Nil, TestCardValue))
+    var engine = TestEngine(Game(players, active, Nil, TestCardValue))
 
     engine = engine.playCard()
     engine = engine.playCard()
@@ -133,17 +141,5 @@ class EngineTest extends FunSuite {
     engine = engine showdown
 
     assert(engine.game isOver)
-  }
-
-  test("Play until game is over.") {
-    val players = p0 :: p1 :: p2 :: p3 :: Nil
-    val active = 0
-    var engine = new Engine(Game(players, active, Nil, TestCardValue))
-
-    engine = Engine.run(engine)
-
-    val newPlayers = p0cscs :: p1cscs :: p2cscs :: p3cscs :: Nil
-    val newEngine = Engine(Game(newPlayers, 0, Nil, TestCardValue))
-    assert(engine === newEngine)
   }
 }
