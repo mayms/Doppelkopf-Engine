@@ -1,0 +1,4 @@
+package game.engine.domain
+
+class Player(val name:String, val cards:List[Card]) {
+}

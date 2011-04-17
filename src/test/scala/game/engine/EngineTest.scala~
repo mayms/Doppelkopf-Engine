@@ -1,0 +1,15 @@
+package game.engine
+
+import game.engine.{Engine}
+import org.scalatest.FunSuite
+
+class EngineTest extends FunSuite {
+  test("Start a game.") {
+    def engine = Engine.startGame()
+
+    assert(engine.game._.cards.size === 12)
+    assert(engine.game.p2.cards.size === 12)
+    assert(engine.game.p3.cards.size === 12)
+    assert(engine.game.p4.cards.size === 12)
+  }
+}

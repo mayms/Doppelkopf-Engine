@@ -1,0 +1,40 @@
+package game.engine
+
+import game.engine.domain._
+import scala.util.{Random}
+
+class Engine(val game:Game) {}
+
+object Engine {
+  def startGame():Engine = {
+    val cards = Random.shuffle(availableCards)
+
+    val p1 = new Player("Player 1", cards.take(12))
+    val p2 = new Player("Player 2", cards.drop(12).take(12))
+    val p3 = new Player("Player 3", cards.drop(24).take(12))
+    val p4 = new Player("Player 4", cards.drop(36).take(12))
+
+    val game = new Game(p1, p2, p3, p4)
+
+    return new Engine(game)
+  }
+
+  private def availableCards():List[Card] = {
+    def kreuz = new Card(Ass, Kreuz) :: new Card(Koenig, Kreuz) :: new Card(Dame, Kreuz)  :: new Card(Bube, Kreuz) :: new Card(Zehn, Kreuz) :: new Card(Neun, Kreuz) :: Nil
+    def pik = new Card(Ass, Pik) :: new Card(Koenig, Pik) :: new Card(Dame, Pik)  :: new Card(Bube, Pik) :: new Card(Zehn, Pik) :: new Card(Neun, Pik) :: Nil
+    def hertz = new Card(Ass, Herz) :: new Card(Koenig, Herz) :: new Card(Dame, Herz)  :: new Card(Bube, Herz) :: new Card(Zehn, Herz) :: new Card(Neun, Herz) :: Nil
+    def karo = new Card(Ass, Karo) :: new Card(Koenig, Karo) :: new Card(Dame, Karo)  :: new Card(Bube, Karo) :: new Card(Zehn, Karo) :: new Card(Neun, Karo) :: Nil
+
+    return kreuz ::: kreuz ::: pik ::: pik ::: hertz ::: hertz ::: karo ::: karo
+  }
+}
+
+
+
+
+
+
+
+
+
+

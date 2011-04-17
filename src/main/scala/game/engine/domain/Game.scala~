@@ -1,0 +1,3 @@
+package game.engine.domain
+
+class Game(val p1:Player, val p2:Player, val p3:Player, val p4:Player) {}
