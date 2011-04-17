@@ -3,20 +3,26 @@ package game.engine
 import game.engine.domain._
 import scala.util.{Random}
 
-import scala.actors._
-import scala.actors.Actor._
+trait Engine {
+  def getCard(player:Player, table:List[(Int, Card)]):(Player, Card)
 
-case class Engine(val game:Game) {
-  def playCard():Engine = {
-    val (player, card) = game.player.playCard(game.table)
+  def playCard():Engine
+
+  def playCard(game:Game):Game = {
+    val (player, card) = getCard(game.player, game.table)
+
     val active = (game.active + 1) % 4
     val players = game.players.updated(game.active, player)
     val table = game.table :+ (game.active, card)
 
-    return new Engine(new Game(players, active, table, game.value))
+    return new Game(players, active, table, game.value)
   }
-  
-  def showdown():Engine = {
+
+  def takeCards(player:Player, cards:List[Card]):Player
+
+  def showdown():Engine
+
+  def showdown(game:Game):Game = {
     val players = game.table.map(_._1)
     val cards = game.table.map(_._2)
 
@@ -27,15 +33,15 @@ case class Engine(val game:Game) {
     val index = values.indexWhere(_ == values.max)
     val playerIndex = players(index)
 
-    val newPlayer = game.players(playerIndex).takeCards(cards)
+    val newPlayer = takeCards(game.players(playerIndex), cards)
     val newPlayers = game.players.updated(playerIndex, newPlayer)
     
-    return new Engine(new Game(newPlayers, playerIndex, Nil, game.value))
+    return new Game(newPlayers, playerIndex, Nil, game.value)
   }
 }
 
 object Engine {
-  def startGame(value: CardValue):Engine = {
+  def startGame(value: CardValue):Game = {
     val cards = Random.shuffle(availableCards)
 
     val p1 = new Human("Player 1", cards.take(12), Nil)
@@ -43,16 +49,7 @@ object Engine {
     val p3 = new Human("Player 3", cards.drop(24).take(12), Nil)
     val p4 = new Human("Player 4", cards.drop(36).take(12), Nil)
 
-    val game = new Game(p1 :: p2 :: p3 :: p4 :: Nil, 0, Nil, value)
-
-    return new Engine(game)
-  }
-
-  def run(engine:Engine):Engine = {
-    if(engine.game.isOver()) {
-      return engine
-    }
-    return run(engine.playCard().playCard().playCard().playCard().showdown())
+    return new Game(p1 :: p2 :: p3 :: p4 :: Nil, 0, Nil, value)
   }
 
   private def availableCards():List[Card] = {
@@ -62,102 +59,5 @@ object Engine {
     def karo = new Card(Ass, Karo) :: new Card(Koenig, Karo) :: new Card(Dame, Karo)  :: new Card(Bube, Karo) :: new Card(Zehn, Karo) :: new Card(Neun, Karo) :: Nil
 
     return kreuz ::: kreuz ::: pik ::: pik ::: hertz ::: hertz ::: karo ::: karo
-  }
-}
-
-object EngineActor {
-  
-  def start() {
-    actor {
-      val engine = Engine.startGame(NormalCardValue)
-      engine.game.players.foreach(PlayerActor.start(_, self))
-      printf("Engine (%s): Now switching to state 'waiting'\n", self)
-      waiting(engine, Map.empty[Actor, Player])
-    }
-  }
-
-  def waiting(engine:Engine, tmpWhois:Map[Actor, Player]) {
-    //printf("Engine (%s): Now in state 'waiting'\n", self)
-
-    react {
-      case ("ready", player:Player, actor:Actor) => {
-	printf("Engine (%s): Got cmd 'ready' from Player (%s)\n", self, actor)
-	
-	val whois = tmpWhois + (actor -> player)
-	if (whois.size < 4)
-	  waiting(engine, whois)
-	printf("Engine (%s): Now switching to state 'playing'\n", self)
-	playing(engine, whois)
-      }
-    }
-  }
-
-  def playing(engine:Engine, whois:Map[Actor, Player]) {
-    //printf("Engine (%s): Now in state 'playing'\n", self)
-
-    whois.keys.foreach(_ ! ("exit", self))
-  }
-}
-
-object TestActor {
-
-  def start() {
-    def engine = Engine.startGame(NormalCardValue)
-
-    val cActor = self
-
-    var ea:Actor = null
-    actor {
-      ea = self
-      cActor ! "cont"
-      a(engine)
-
-      def a(engine: Engine) {
-	react {
-	  case actor:Actor => {
-	    println("got msg from " + actor)
-	    a(engine)
-	  }
-	}
-      }
-    }
-
-    self.receive{case "cont" => {}}
-    println("ea ready")
-
-    var a:Actor = null
-    actor {
-      a = self
-      cActor ! "cont"
-
-      react {
-	case "s" => {
-	  println("a is sending " + self)
-	  ea ! self
-	}
-      }
-    }
-
-    self.receive{case "cont" => {}}
-    println("a ready")
-
-    var b:Actor = null
-    actor {
-      b = self
-      cActor ! "cont"
-
-      react {
-	case "s" => {
-	  println("b is sending " + self)
-	  ea ! self
-	}
-      }
-    }
-
-    self.receive{case "cont" => {}}
-    println("b ready")
-
-    a ! "s"
-    b ! "s"
   }
 }

@@ -5,44 +5,44 @@ import scala.actors.Actor._
 
 import game.engine.domain._
 
-case class EngineActor(game:Game) extends Engine {
+case class EngineActor(game:Game, whois:Map[Player, Actor]) extends Engine {
   def getCard(player:Player, table:List[(Int, Card)]):(Player, Card) = null
   def takeCards(player:Player, cards:List[Card]):Player = null
 
-  def playCard() = EngineActor(playCard(game))
-  def showdown() = EngineActor(showdown(game))
+  def playCard() = copy(game = playCard(game))
+  def showdown() = copy(game = showdown(game))
 }
 
 object EngineActor {
   
   def start() {
     actor {
-      val engine = EngineActor(Engine.startGame(NormalCardValue))
+      val engine = EngineActor(Engine.startGame(NormalCardValue), Map.empty[Player, Actor])
       engine.game.players.foreach(PlayerActor.start(_, self))
       printf("Engine (%s): Now switching to state 'waiting'\n", self)
-      waiting(engine, Map.empty[Actor, Player])
+      waiting(engine)
     }
   }
 
-  def waiting(engine:Engine, tmpWhois:Map[Actor, Player]) {
+  def waiting(engine:EngineActor) {
     //printf("Engine (%s): Now in state 'waiting'\n", self)
 
     react {
       case ("ready", player:Player, actor:Actor) => {
 	printf("Engine (%s): Got cmd 'ready' from Player (%s)\n", self, actor)
 	
-	val whois = tmpWhois + (actor -> player)
+	val whois = engine.whois + (player -> actor)
 	if (whois.size < 4)
-	  waiting(engine, whois)
+	  waiting(engine.copy(whois = whois))
 	printf("Engine (%s): Now switching to state 'playing'\n", self)
-	playing(engine, whois)
+	playing(engine.copy(whois = whois))
       }
     }
   }
 
-  def playing(engine:Engine, whois:Map[Actor, Player]) {
+  def playing(engine:EngineActor) {
     //printf("Engine (%s): Now in state 'playing'\n", self)
 
-    whois.keys.foreach(_ ! ("exit", self))
+    engine.whois.values.foreach(_ ! ("exit", self))
   }
 }
