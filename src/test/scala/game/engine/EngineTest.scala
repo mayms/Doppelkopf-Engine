@@ -5,12 +5,14 @@ import game.engine.domain._
 
 import org.scalatest.FunSuite
 
-case class TestPlayer(name:String, hand:List[Card], won:List[Card]) extends Player {
-  def playCard(table:List[(Int, Card)]) = (TestPlayer(name, hand.tail, won), hand.head)
+case class TestPlayer(id:PlayerId, hand:List[Card], won:List[Card]) extends Player {
+  def this(id:String, hand:List[Card], won:List[Card]) = this(PlayerId(id), hand, won)
 
-  def takeCards(cards:List[Card]) = TestPlayer(name, hand, cards ::: won)
+  def playCard(table:List[(Int, Card)]) = (copy(hand = hand.tail), hand.head)
 
-  override def toString() = "TestPlayer [name=" + name + ", cards=" + hand + ", won=" + won + "]"
+  def takeCards(cards:List[Card]) = copy(won = cards ::: won)
+
+  override def toString() = "TestPlayer [id=" + id + ", cards=" + hand + ", won=" + won + "]"
 }
 
 object TestCardValue extends CardValue {
@@ -33,24 +35,24 @@ case class TestEngine(game:Game) extends Engine {
 }
 
 class EngineTest extends FunSuite {
-  private val p0 = TestPlayer("P0", Ass(Kreuz) :: Koenig(Kreuz) :: Nil, Nil)
-  private val p1 = TestPlayer("P1", Ass(Pik) :: Koenig(Pik) :: Nil, Nil)
-  private val p2 = TestPlayer("P2", Ass(Herz) :: Koenig(Herz) :: Nil, Nil)
-  private val p3 = TestPlayer("P3", Ass(Karo) :: Koenig(Karo) :: Nil, Nil)
+  private val p0 = new TestPlayer("P0", Ass(Kreuz) :: Koenig(Kreuz) :: Nil, Nil)
+  private val p1 = new TestPlayer("P1", Ass(Pik) :: Koenig(Pik) :: Nil, Nil)
+  private val p2 = new TestPlayer("P2", Ass(Herz) :: Koenig(Herz) :: Nil, Nil)
+  private val p3 = new TestPlayer("P3", Ass(Karo) :: Koenig(Karo) :: Nil, Nil)
 
-  private val p0c = TestPlayer("P0", Koenig(Kreuz) :: Nil, Nil)
-  private val p1c = TestPlayer("P1", Koenig(Pik) :: Nil, Nil)
-  private val p2c = TestPlayer("P2", Koenig(Herz) :: Nil, Nil)
-  private val p3c = TestPlayer("P3", Koenig(Karo) :: Nil, Nil)
+  private val p0c = new TestPlayer("P0", Koenig(Kreuz) :: Nil, Nil)
+  private val p1c = new TestPlayer("P1", Koenig(Pik) :: Nil, Nil)
+  private val p2c = new TestPlayer("P2", Koenig(Herz) :: Nil, Nil)
+  private val p3c = new TestPlayer("P3", Koenig(Karo) :: Nil, Nil)
 
-  private val p0cscs = TestPlayer("P0", Nil, Koenig(Kreuz) :: Koenig(Pik) :: Koenig(Herz) :: Koenig(Karo) :: Ass(Kreuz) :: Ass(Pik) :: Ass(Herz) :: Ass(Karo) :: Nil)
-  private val p1cscs = TestPlayer("P1", Nil, Nil)
-  private val p2cscs = TestPlayer("P2", Nil, Nil)
-  private val p3cscs = TestPlayer("P3", Nil, Nil)
+  private val p0cscs = new TestPlayer("P0", Nil, Koenig(Kreuz) :: Koenig(Pik) :: Koenig(Herz) :: Koenig(Karo) :: Ass(Kreuz) :: Ass(Pik) :: Ass(Herz) :: Ass(Karo) :: Nil)
+  private val p1cscs = new TestPlayer("P1", Nil, Nil)
+  private val p2cscs = new TestPlayer("P2", Nil, Nil)
+  private val p3cscs = new TestPlayer("P3", Nil, Nil)
 
   test("Start a game.") {
-    val game = Engine.startGame(TestCardValue)
-    game.players.foreach(p => assert(p.hand.size === 12))
+    val hands = Engine.shuffle()
+    hands.foreach(hand => assert(hand.size === 12))
   }
 
   test("Play a card.") {

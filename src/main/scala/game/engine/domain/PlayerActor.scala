@@ -18,7 +18,10 @@ object PlayerActor {
   def waiting(player: Player) {
     react {
       case("play", table:List[(Int, Card)], engine:Actor) => {
+	printf("Player (%s): Got cmd 'play' from engine (%s)\n", self, engine)
+
 	val (newPlayer, card) = player.playCard(table)
+	//printf("Player (%s):\n  - newPlayer = %s\n  - card = %s\n", self, newPlayer, card)
 	engine ! ("played", newPlayer, card, self)
 	waiting(newPlayer)
       }

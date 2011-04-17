@@ -19,6 +19,8 @@ case class Game(val players:List[Player], val active:Int, val table:List[(Int, C
    */ 
   def value(card: Card):Int = value(card, group)
 
+  def isShowdown() = table.size == 4
+
   def isOver() = players.forall(p => p.hand == Nil) && table.isEmpty
 }
 

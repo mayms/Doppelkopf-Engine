@@ -1,6 +1,10 @@
 package game.engine.domain
 
+case class PlayerId(private val id:String)
+
 trait Player {
+  val id:PlayerId
+
   val hand:List[Card]
 
   val won:List[Card]
@@ -10,6 +14,7 @@ trait Player {
   def takeCards(cards:List[Card]):Player
 }
 
+/*
 case class Human(name:String, hand:List[Card], won:List[Card]) extends Player {
   def playCard(table:List[(Int, Card)]) = (null, null)
 
@@ -17,3 +22,4 @@ case class Human(name:String, hand:List[Card], won:List[Card]) extends Player {
 
   override def toString() = "Human [name=" + name + ", cards=" + hand + ", won=" + won + "]"
 }
+*/

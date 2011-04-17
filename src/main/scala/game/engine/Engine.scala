@@ -41,15 +41,9 @@ trait Engine {
 }
 
 object Engine {
-  def startGame(value: CardValue):Game = {
+  def shuffle():List[List[Card]] = {
     val cards = Random.shuffle(availableCards)
-
-    val p1 = new Human("Player 1", cards.take(12), Nil)
-    val p2 = new Human("Player 2", cards.drop(12).take(12), Nil)
-    val p3 = new Human("Player 3", cards.drop(24).take(12), Nil)
-    val p4 = new Human("Player 4", cards.drop(36).take(12), Nil)
-
-    return new Game(p1 :: p2 :: p3 :: p4 :: Nil, 0, Nil, value)
+    return cards.take(12) :: cards.drop(12).take(12) :: cards.drop(24).take(12) :: cards.drop(36).take(12) :: Nil
   }
 
   private def availableCards():List[Card] = {
